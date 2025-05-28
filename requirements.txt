@@ -2,8 +2,13 @@ fake-useragent
 ffmpeg-python
 fleep
 langcodes
+language_data
 requests
 tqdm
 Unidecode
 urllib3
 wheel
+uvicorn
+fastapi
+python-multipart
+uuid

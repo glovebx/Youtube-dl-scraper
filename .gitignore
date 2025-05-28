@@ -8,3 +8,5 @@ main.py
 *.egg-info/
 site/
 venv/
+.DS_Store
+tasks.db

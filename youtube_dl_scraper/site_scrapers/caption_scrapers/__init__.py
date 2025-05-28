@@ -2,6 +2,7 @@
 # from youtube_dl_scraper.core.base_scraoer import BaseScraper
 from youtube_dl_scraper.utils.registration import register_scrapers
 from .downsub import DownSub
+from .notegpt import NoteGpt
 
 
 def register(*scraper_objs):
@@ -15,3 +16,4 @@ caption_scrapers = scrapers
 
 # register scrapers
 register(DownSub)
+register(NoteGpt)

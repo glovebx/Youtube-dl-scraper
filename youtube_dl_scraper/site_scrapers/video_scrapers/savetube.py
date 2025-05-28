@@ -27,7 +27,8 @@ class SaveTube(BaseScraper):
         "Content-Type": "application/json",
     }
 
-    ua_generator = UserAgent(platforms="pc", browsers=["firefox"])
+    # ua_generator = UserAgent(platforms="pc", browsers=["firefox"])
+    ua_generator = UserAgent(browsers=["chrome"])
 
     def generate_cdn(self) -> int:
         cdn_list = [51, 52, 53, 54, 56, 57, 58, 59, 60, 61]

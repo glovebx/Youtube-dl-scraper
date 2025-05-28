@@ -1,6 +1,6 @@
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from urllib3.util.retry import Retry
 from fake_useragent import UserAgent
 from youtube_dl_scraper.core.base_scraper import BaseScraper
 from youtube_dl_scraper.core.exceptions import (
@@ -43,7 +43,7 @@ class Mp3Youtube(BaseScraper):
         if response.status_code != 200:
             raise ScraperExecutionError(
                 self.__name__,
-                f"Error fetching key: invalid response code {response.status_code}{', Error Message: ' + data['errorMsg'] + '.' if data['errorMsg'] else '.'}",
+                f"Mp3Youtube Error fetching key: invalid response code {response.status_code}{', Error Message: ' + data['errorMsg'] + '.' if data['errorMsg'] else '.'}",
             )
 
         self.session.headers.update(data)
@@ -57,7 +57,7 @@ class Mp3Youtube(BaseScraper):
         data = response.json()
         if response.status_code != 200:
             raise VideoNotFoundError(
-                f"Error fetching video data: invalid status code {response.self}{', Error Message: ' + data['errorMsg'] + '.' if data['errorMsg'] else '.'}"
+                f"Mp3Youtube Error fetching video data: invalid status code {response.status_code}{', Error Message: ' + data['errorMsg'] + '.' if data['errorMsg'] else '.'}"
             )
 
         return data
@@ -80,7 +80,7 @@ class Mp3Youtube(BaseScraper):
         key = self.get_key()
         if not (key or isinstance(key, str)):
             raise ScraperExecutionError(
-                self.__name__, "Error Occured While Scraping, Invalid key gotten."
+                self.__name__, "Mp3Youtube Error Occured While Scraping, Invalid key gotten."
             )
 
         data = self.get_video_info(url)
@@ -103,7 +103,7 @@ class Mp3Youtube(BaseScraper):
         def get_url(data):
             if data.get("error"):
                 raise ScraperExecutionError(
-                    f"Conversion Error {': ' + data['errorMsg'] + '.' if data['errorMsg'] else '.'}"
+                    f"Mp3Youtube Conversion Error {': ' + data['errorMsg'] + '.' if data['errorMsg'] else '.'}"
                 )
 
             return data["url"]

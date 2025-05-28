@@ -29,7 +29,8 @@ class Y2Save(BaseScraper):
         "x-requested-with": "XMLHttpRequest",
     }
 
-    ua_generator = UserAgent(platforms="pc")
+    # ua_generator = UserAgent(platforms="pc")
+    ua_generator = UserAgent(browsers=["chrome"])
 
     def __init__(self, download_path: str):
         self.session = requests.Session()
@@ -44,7 +45,7 @@ class Y2Save(BaseScraper):
         if response.status_code != 200:
             raise ScraperExecutionError(
                 self.__name__,
-                f"Error fetching CSRF token: invalid response code: {response.status_code}",
+                f"Y2Save Error fetching CSRF token: invalid response code: {response.status_code}",
             )
 
         csrf_token = response.text.split('name="csrf-token" content="')[1].split('"')[0]
@@ -59,7 +60,7 @@ class Y2Save(BaseScraper):
         if response.status_code != 200:
             raise ScraperExecutionError(
                 self.__name__,
-                f"Error occurred fetching video data: invalid response code: {response.status_code}",
+                f"Y2Save Error occurred fetching video data: invalid response code: {response.status_code}",
             )
 
         data = response.json()
@@ -80,12 +81,12 @@ class Y2Save(BaseScraper):
         if response.status_code != 200:
             raise ScraperExecutionError(
                 self.__name__,
-                f"Error occurred during conversion: invalid response code: {response.status_code}",
+                f"Y2Save Error occurred during conversion: invalid response code: {response.status_code}",
             )
 
         data = response.json()
         if data.get("c_status") == "FAILED":
-            raise ScraperExecutionError(self.__name__, "Conversion failed")
+            raise ScraperExecutionError(self.__name__, "Y2Save Conversion failed")
         return data["dlink"]
 
     def parse_video_data(self, data: dict) -> dict:

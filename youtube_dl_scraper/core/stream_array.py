@@ -1,4 +1,4 @@
-from typing import Self, Optional, List, Dict, Callable, Union
+from typing import Optional, List, Dict, Callable, Union
 from .stream import Stream, VideoStream, AudioStream
 
 
@@ -138,6 +138,19 @@ class StreamArray:
         ordered_by_abr = self._get_audio()
         if ordered_by_abr:
             return ordered_by_abr[0]
+        
+    def get_higher_bitrate(self) -> Optional[AudioStream]:
+        """
+        Get the audio stream with the highest bitrate.
+
+        Returns:
+            Optional[AudioStream]: The highest bitrate audio stream.
+        """
+        ordered_by_abr = self._get_audio()
+        if ordered_by_abr:
+            if len(ordered_by_abr) > 1:
+                return ordered_by_abr[1]
+            return ordered_by_abr[0]
 
     def get_highest_resolution(self) -> Optional[VideoStream]:
         """
@@ -150,7 +163,7 @@ class StreamArray:
         if video_streams:
             return video_streams[0]
 
-    def get_audio_streams(self) -> Self:
+    def get_audio_streams(self):
         """
         Get a new StreamArray containing only audio streams.
 
@@ -160,7 +173,7 @@ class StreamArray:
         audio_streams = self._get_audio()
         return StreamArray(streams=audio_streams)
 
-    def get_video_streams(self) -> Self:
+    def get_video_streams(self):
         """
         Get a new StreamArray containing only video streams.
 
@@ -170,7 +183,7 @@ class StreamArray:
         video_streams = self._get_video()
         return StreamArray(streams=video_streams)
 
-    def filter(self, **kwargs: Union[str, int, bool]) -> Self:
+    def filter(self, **kwargs: Union[str, int, bool]):
         """
         Filter streams based on attributes.
 
@@ -191,7 +204,7 @@ class StreamArray:
         ]
         return StreamArray(streams=filtered)
 
-    def order_by(self, key: str, reverse: bool = False) -> Self:
+    def order_by(self, key: str, reverse: bool = False):
         """
         Order streams by a specific attribute.
 
@@ -274,7 +287,7 @@ class StreamArray:
         """
         return str(self.streams)
 
-    def __iter__(self) -> Self:
+    def __iter__(self):
         """
         Initialize iteration over the streams.
 
