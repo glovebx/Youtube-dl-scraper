@@ -195,7 +195,8 @@ def download_worker(download_q: queue.Queue, status_q: queue.Queue):
                 final_audio_filepath = video.streams.get_higher_bitrate().download()
                 print(final_audio_filepath)
 
-                if final_audio_filepath and os.path.exists(final_audio_filepath):
+                
+                if final_audio_filepath and os.path.exists(final_audio_filepath) and os.path.getsize(final_audio_filepath) > 0:
                     print(f"Worker: Task {task_id} successful. File: {final_audio_filepath}")
                     result.update({'audio': final_audio_filepath})
                     # Update status in DB
@@ -279,7 +280,7 @@ def download_worker(download_q: queue.Queue, status_q: queue.Queue):
                 print(final_srt_filepath)
                 print(final_text_filepath)
                 
-                if final_srt_filepath and os.path.exists(final_srt_filepath) and final_text_filepath and os.path.exists(final_text_filepath):
+                if final_srt_filepath and os.path.exists(final_srt_filepath) and os.path.getsize(final_srt_filepath) > 0 and final_text_filepath and os.path.exists(final_text_filepath) and os.path.getsize(final_text_filepath) > 0:
                     print(f"Worker: Task {task_id} successful. File: {final_srt_filepath}")
                     result.update({'srt': final_srt_filepath, 'text': final_text_filepath})
                     # Update status in DB
