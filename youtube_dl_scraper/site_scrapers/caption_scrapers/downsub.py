@@ -335,13 +335,13 @@ class DownSub(BaseScraper):
                 await page.goto(f'https://downsub.com?url={url}', timeout=86400000, wait_until='domcontentloaded')
                 # await page.screenshot(path="loaded.png")
 
-                print("Page 111111")
+                print(f"Page goto {url}")
 
                 # SRT 按钮
                 srt_selector = "#app > div > main > div > div.container.ds-info.outlined > div > div.row.no-gutters > div.pr-1.col-sm-7.col-md-6.col-12 > div.flex.mt-5.text-center > div.layout.justify-start.align-center > button:nth-child(1) > span > button > span"
                 await page.wait_for_selector(srt_selector, state='visible')
         
-                print("Page 111111-1")        
+                print("SRT button found")
                 # 1. Start waiting for the download BEFORE clicking the button
                 # This is crucial to ensure you don't miss the download event.
                 async with page.expect_download() as download_info:
@@ -423,12 +423,11 @@ class DownSub(BaseScraper):
                 raw_selector = "#app > div > main > div > div.container.ds-info.outlined > div > div.row.no-gutters > div.pr-1.col-sm-7.col-md-6.col-12 > div.flex.mt-5.text-center > div.layout.justify-start.align-center > button:nth-child(3) > span > button"
                 await page.wait_for_selector(raw_selector, state='visible')
 
-
-                print("Page 1111112")
+                print("RAW button found")
                 # 点击
                 await page.click(raw_selector)
 
-                print("Page 111113")
+                print("RAW button clicked")
                 try:
                     await page.wait_for_timeout(10000)
                 except:
@@ -438,18 +437,29 @@ class DownSub(BaseScraper):
                 url = page.url
                 print(f"当前页面URL: {url}")
 
+                # 默认英文
+                subtitle_code = 'a.en'
+                subtitle_name = 'English (auto-generated)'
                 title = self.extract_title_from_url(url).replace('[DownSub.com]', '').strip()
                 if 'English (auto-generated)' in title:
                     title = title.replace('English (auto-generated)', '')
                 if '[English]' in title:
                     title = title.replace('[English]', '')
+                if 'Japanese (auto-generated)' in title:
+                    title = title.replace('Japanese (auto-generated)', '')
+                    subtitle_code = 'a.ja'
+                    subtitle_name = 'Japanese (auto-generated)'
+                if '[Japanese]' in title:
+                    title = title.replace('[Japanese]', '')
+                    subtitle_code = 'a.ja'
+                    subtitle_name = 'Japanese (auto-generated)'
                 # 获取当前页面body中的文本内容
                 body_text = await page.inner_text('body')
 
-                sub = {'code': 'a.en', 'name': 'English (auto-generated)', 'urls': {}, '__contents': [{'text': body_text, 'srt': srt_text}]}
+                sub = {'code': subtitle_code, 'name': subtitle_name, 'urls': {}, '__contents': [{'text': body_text, 'srt': srt_text}]}
                 self.captured_response_data = {'title': title, 'subtitles': [sub]}
 
-                print("Page 111114")
+                print(f"Subtitle downloading {subtitle_name}")
             except PlaywrightError as e:
                 if "Page.wait_for_selector: Target page, context or browser has been closed" in str(e):
                     print("Page has been closed properly")

@@ -60,14 +60,20 @@ class Video:
             vid = VideoStream(
                 stream, file_name=self.title_slug, download_path=self.download_path
             )
-            streams.add_stream(vid)
+            url = vid.get_url()
+            # print(f"video url is ${url}")
+            if url and url[:4] == 'http':
+                streams.add_stream(vid)
 
         # Adding audio streams
         for stream in audio_streams:
             aud = AudioStream(
                 stream, file_name=self.title_slug, download_path=self.download_path
             )
-            streams.add_stream(aud)
+            url = aud.get_url()
+            # print(f"audio url is ${url}")
+            if url and url[:4] == 'http':            
+                streams.add_stream(aud)
 
         return streams
 

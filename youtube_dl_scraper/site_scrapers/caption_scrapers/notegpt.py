@@ -15,7 +15,7 @@ from  playwright.async_api import async_playwright, Response, Error as Playwrigh
 import asyncio
 from youtube_dl_scraper.utils.json_to_srt import json_to_srt
 
-
+# 现在需要登录了2025/10/01
 class NoteGpt(BaseScraper):
     """A scraper wrapper for notegpt.io"""
 

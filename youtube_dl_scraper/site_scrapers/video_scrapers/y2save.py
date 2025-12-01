@@ -12,6 +12,7 @@ from youtube_dl_scraper.core.exceptions import (
 )
 
 
+# 不能用，有cf的真人验证步骤
 class Y2Save(BaseScraper):
     # Meta data
     __name__ = "Y2Save"

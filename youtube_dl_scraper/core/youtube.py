@@ -11,7 +11,7 @@ class YouTube:
 
     def __init__(
         self,
-        video_scraper_name: Optional[str] = "mp3youtube",
+        video_scraper_name: Optional[str] = "savetube",
         caption_scraper_name: Optional[str] = "downsub",
         download_path: Optional[str] = "downloads",
     ):

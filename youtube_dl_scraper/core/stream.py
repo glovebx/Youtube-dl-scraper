@@ -102,17 +102,25 @@ class Stream:
                 print("File exists")
                 return full_name
             if error_on_existent:
-                raise FileExistsError(full_name, path)
-
+                raise FileExistsError(full_name, path)                        
         try:
-            with requests.get(self.get_url(), stream=True) as response:
+            url = self.get_url()
+            print(f"audio download starting...${url}")
+            with requests.get(url, stream=True) as response:
                 response.raise_for_status()
                 total_size = int(response.headers.get("content-length", 0))
-                file_ext = Path(
-                    get_filename_from_cd(
-                        response.headers.get("content-disposition") or ""
-                    )
-                ).suffix
+                file_ext = Path(file_name).suffix
+                if not file_ext:
+                    cd_filename = get_filename_from_cd(
+                            response.headers.get("content-disposition") or ""
+                        )                    
+                    if cd_filename:
+                        file_ext = Path(cd_filename).suffix
+                    else:
+                        if isinstance(self, VideoStream):
+                            file_ext = '.mp4'
+                        else:
+                            file_ext = '.mp3'
                 file_path = path / (file_name + file_ext)
                 with file_path.open("wb") as file, tqdm(
                     desc=f"Downloading {file_name + file_ext}",

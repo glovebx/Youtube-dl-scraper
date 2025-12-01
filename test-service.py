@@ -4,10 +4,13 @@ import threading
 import queue
 import json
 from youtube_dl_scraper import YouTube
+from youtube_dl_scraper.utils.audio_extractor import extract_mp3
 import os
 import uvicorn
 import sqlite3
+import subprocess
 import uuid
+from pathlib import Path as OsPath
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Path
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
@@ -20,6 +23,9 @@ from urllib.parse import urlparse
 # --- Configuration ---
 DOWNLOADS_DIR = "downloads"
 DATABASE_URL = "tasks.db"
+
+# 定义语言代码的尝试顺序
+lang_priority = ['a.en', 'en', 'en-US', 'a.ja', 'ja', 'ja-JP']
 
 # Create downloads directory if it doesn't exist
 if not os.path.exists(DOWNLOADS_DIR):
@@ -151,8 +157,7 @@ def get_task_from_db_by_url(url: str) -> Dict[str, Any] | None:
             conn.close()
 
 
-# --- Download Worker Thread ---
-
+# --- Download Worker Thread ---        
 def download_worker(download_q: queue.Queue, status_q: queue.Queue):
     """Worker thread to process the download queue."""
     print("Download worker thread started.")
@@ -187,15 +192,33 @@ def download_worker(download_q: queue.Queue, status_q: queue.Queue):
         print(f'task result=={result}')
 
         # notegpt 可在国内网络下运行
-        youtube = YouTube(caption_scraper_name = "notegpt")
+        youtube = YouTube()
 
         try:
             if not result.get('audio'):
                 video = youtube.scrape_video(url)
-                final_audio_filepath = video.streams.get_higher_bitrate().download()
-                print(final_audio_filepath)
 
-                
+                try:
+                    final_audio_filepath = video.streams.get_higher_bitrate().download()
+                except Exception as e:
+                    video_file = video.streams.get_lowest_resolution().download()
+                    print(video_file)
+                    # 下载完成，用ffmpeg抽取mp3音频
+                    video_path = OsPath(video_file)
+                    # 获取文件后缀（带点号）
+                    file_ext = video_path.suffix
+                    # 构建新的音频文件名
+                    if file_ext:
+                        # 使用with_suffix方法更安全地替换后缀
+                        final_audio_filepath = str(video_path.with_suffix('.mp3'))
+                    else:
+                        # 如果原文件没有后缀，直接添加.mp3
+                        final_audio_filepath = str(video_path) + '.mp3'
+
+                    extract_mp3(video_file, final_audio_filepath)
+
+                print(final_audio_filepath)
+                    
                 if final_audio_filepath and os.path.exists(final_audio_filepath) and os.path.getsize(final_audio_filepath) > 0:
                     print(f"Worker: Task {task_id} successful. File: {final_audio_filepath}")
                     result.update({'audio': final_audio_filepath})
@@ -234,48 +257,40 @@ def download_worker(download_q: queue.Queue, status_q: queue.Queue):
                     # print(captions)
                     print(captions.subtitles)
 
-                    caption = captions.get_captions_by_lang_code('a.en')
-                    if not caption:
-                        caption = captions.get_captions_by_lang_code('en')
-                        if not caption:                    
-                            caption = captions.get_captions_by_lang_code('en-US')
-
+                    # # 处理英文和日文
+                    caption = None
+                    for lang_code in lang_priority:
+                        caption = captions.get_captions_by_lang_code(lang_code)
+                        if caption:
+                            break  # 一旦找到可用的字幕，立即退出循环
+                        
                     try:
                         final_srt_filepath = caption.raw2file().as_posix()
                         final_text_filepath = caption.txt().as_posix()
                     except Exception as e:
                         print("capture raw subtitles failed", e)
-                    # try:
-                    #     final_filepath = caption.txt().as_posix()
-                    # except Exception as e:
-                    #     print("capture txt subtitles failed", e)
-                    #     try:
-                    #         final_filepath = caption.raw2file().as_posix()
-                    #     except Exception as e:
-                    #         print("capture raw subtitles failed", e)
-                    #         pass    
 
-                if not final_srt_filepath or not final_text_filepath:
-                    # downsub 下载文件的域名从国内网络无法访问
-                    youtube = YouTube(caption_scraper_name = "downsub")
+                # if not final_srt_filepath or not final_text_filepath:
+                #     # downsub 下载文件的域名从国内网络无法访问
+                #     youtube = YouTube(caption_scraper_name = "downsub")
 
-                    try:
-                        captions = youtube.scrape_captions(url)
-                    except Exception as e:
-                        print("capture captions failed again", e)
+                #     try:
+                #         captions = youtube.scrape_captions(url)
+                #     except Exception as e:
+                #         print("capture captions failed again", e)
 
-                    if captions:
-                        caption = captions.get_captions_by_lang_code('a.en')
-                        if not caption:
-                            caption = captions.get_captions_by_lang_code('en')
-                            if not caption:                    
-                                caption = captions.get_captions_by_lang_code('en-US')
+                #     if captions:
+                #         caption = captions.get_captions_by_lang_code('a.en')
+                #         if not caption:
+                #             caption = captions.get_captions_by_lang_code('en')
+                #             if not caption:                    
+                #                 caption = captions.get_captions_by_lang_code('en-US')
 
-                        try:
-                            final_srt_filepath = caption.raw2file().as_posix()
-                            final_text_filepath = caption.txt().as_posix()
-                        except Exception as e:
-                            print("capture txt subtitles failed again", e)
+                #         try:
+                #             final_srt_filepath = caption.raw2file().as_posix()
+                #             final_text_filepath = caption.txt().as_posix()
+                #         except Exception as e:
+                #             print("capture txt subtitles failed again", e)
 
                 print(final_srt_filepath)
                 print(final_text_filepath)

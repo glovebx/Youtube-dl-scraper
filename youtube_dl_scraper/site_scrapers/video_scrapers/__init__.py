@@ -4,6 +4,7 @@ from youtube_dl_scraper.utils.registration import register_scrapers
 from .savetube import SaveTube
 from .mp3youtube import Mp3Youtube
 from .y2save import Y2Save
+# from .ytdlp_cmd import YtdlpCmd
 
 
 def register(*scraper_objs):
@@ -19,3 +20,4 @@ video_scrapers = scrapers
 register(SaveTube)
 register(Mp3Youtube)
 register(Y2Save)
+# register(YtdlpCmd)

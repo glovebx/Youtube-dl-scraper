@@ -162,6 +162,17 @@ class StreamArray:
         video_streams = self._get_video()
         if video_streams:
             return video_streams[0]
+        
+    def get_lowest_resolution(self) -> Optional[VideoStream]:
+        """
+        Get the video stream with the lowest resolution.
+
+        Returns:
+            Optional[VideoStream]: The lowest resolution video stream.
+        """
+        video_streams = self._get_video()
+        if video_streams:
+            return video_streams[-1]
 
     def get_audio_streams(self):
         """

@@ -9,8 +9,9 @@ from youtube_dl_scraper.core.exceptions import (
     ScraperExecutionError,
     VideoNotFoundError,
 )
+from .savetube_decryptor import call_savetube_decryptor
 
-
+# 升级了，
 class SaveTube(BaseScraper):
 
     # meta data
@@ -30,8 +31,10 @@ class SaveTube(BaseScraper):
     # ua_generator = UserAgent(platforms="pc", browsers=["firefox"])
     ua_generator = UserAgent(browsers=["chrome"])
 
+    # https://media.savetube.me/api/random-cdn
     def generate_cdn(self) -> int:
-        cdn_list = [51, 52, 53, 54, 56, 57, 58, 59, 60, 61]
+        # cdn_list = [51, 52, 53, 54, 56, 57, 58, 59, 60, 61]
+        cdn_list = [400, 401, 402, 403, 404, 405, 406]
         # return math.floor(random.random() * 11) + 51
         return random.choice(cdn_list)
 
@@ -40,7 +43,7 @@ class SaveTube(BaseScraper):
         headers = {**self.headers, "User-Agent": self.ua_generator.random}
         payload = json.dumps({"url": url})
         response = requests.post(
-            f"https://cdn{self.generate_cdn()}.savetube.su/info",
+            f"https://cdn{self.generate_cdn()}.savetube.vip/v2/info",
             data=payload,
             headers=headers,
         )
@@ -51,9 +54,16 @@ class SaveTube(BaseScraper):
                 )
             )
         data = response.json()
+        # print(f"savetube encrypted data => ${data}")
         if not data.get("status") or data.get("message", "") != "200":
             raise VideoNotFoundError("No data found for requested video")
-        return self.parse_video_data(data["data"])
+        encrypted_data = data["data"]
+        # print(f"savetube encrypted data => ${encrypted_data}")        
+        video_data = call_savetube_decryptor(encrypted_data)
+        print(f"savetube decrypted data => ${video_data}")
+        if not video_data:
+            raise VideoNotFoundError("No valid data found for requested video")
+        return self.parse_video_data(video_data)
 
     def parse_video_data(self, data: dict) -> dict:
         video_data = {}
@@ -77,7 +87,7 @@ class SaveTube(BaseScraper):
                 "quality": int(q),
                 "key": video_data["key"],
             }
-            api = f"https://cdn{cdn()}.savetube.su/download"
+            api = f"https://cdn{cdn()}.savetube.vip/download"
             headers = {
                 **self.headers,
                 "User-Agent": self.ua_generator.random,
@@ -86,6 +96,7 @@ class SaveTube(BaseScraper):
             payload = json.dumps(payload)
             # print(payload)
             response = requests.post(api, data=payload, headers=headers)
+            print(response.text)
             data = response.json()
             # print(data)
             if (
@@ -136,6 +147,7 @@ class SaveTube(BaseScraper):
 
         # handle custom properties
         video_data["custom_props"] = {}
-        video_data["custom_props"]["jpeg_thumbnail"] = data["jpeg_thumbnail"]
+        if data.get("jpeg_thumbnail"):
+            video_data["custom_props"]["jpeg_thumbnail"] = data["jpeg_thumbnail"]
 
         return video_data
